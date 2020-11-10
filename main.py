@@ -109,11 +109,11 @@ def datetime_api_v1(req, start_response):
     timestamp = get_timestamp_by_tz_name(tz_name)
     if not timestamp:
         start_response(
-            status = '400 BAD REQUEST',
+            status = '404 NOT FOUND',
             headers = [('Content-type', 'application/json; charset=utf-8')]
         )
         return json.dumps({
-            "status": 400,
+            "status": 404,
             "message": f"Timezone {tz_name} does not exist",
         }).encode().splitlines()
     else:
@@ -139,12 +139,17 @@ def get_timestamp_by_tz_name(tz_name):
 def datediff_api_v1(req, start_response):
     try:
         body = json.loads(req.body)
-
-        timestamp1 = datetime.strptime(body["start"]["date"], '%m.%d.%Y %H:%M:%S')
+        try: 
+            timestamp1 = datetime.strptime(body["start"]["date"], '%m.%d.%Y %H:%M:%S')
+        except:
+            timestamp1 = datetime.strptime(body["start"]["date"], '%H:%M%p %Y-%m-%d')
         tz1 = get_localzone() if "tz" not in body["start"] else pytz.timezone(body["start"]["tz"])
         timestamp1 = tz1.localize(timestamp1)
         
-        timestamp2 = datetime.strptime(body["end"]["date"], '%m.%d.%Y %H:%M:%S')
+        try:
+            timestamp2 = datetime.strptime(body["end"]["date"], '%m.%d.%Y %H:%M:%S')
+        except:
+            timestamp2 = datetime.strptime(body["end"]["date"], '%H:%M%p %Y-%m-%d')
         tz2 = get_localzone() if "tz" not in body["end"] else pytz.timezone(body["end"]["tz"])
         timestamp2 = tz2.localize(timestamp2)
     except:
